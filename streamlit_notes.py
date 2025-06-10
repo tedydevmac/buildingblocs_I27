@@ -84,3 +84,20 @@ import numpy as np
 # st.cache_data --> decorator to cache function results
 # st.cache_resource --> decorator to cache global resources
 # st.session_state --> dictionary-like object to store state across reruns
+
+x = np.arange(-100, 100) / 10
+y1 = np.sin(x)
+y2 = np.cos(x)
+
+data = {
+    'x value': x,
+    'Sine': y1,
+    'Cosine': y2,
+    'x axis': 0
+}
+
+df = pd.DataFrame(data)
+st.dataframe(df)
+# st.table(df) == st.dataframe(df) except it is static (cannot change during runtime)
+
+st.line_chart(data=data, x_label="x value", y_label="y value", color=["#0000FF", "#FF0000", "#000"], x="x value", y=["Sine", "Cosine", "x axis"])
