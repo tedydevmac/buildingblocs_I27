@@ -1,4 +1,4 @@
-# Import necessary libraries
+# Import libraries
 import streamlit as st
 import os
 from utils import transcribe_audio, predict_sign_from_image
@@ -12,7 +12,7 @@ from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 import av
 import json
 
-# Define the Sign Language Model
+# Define sign language model
 class SignLanguageModel(nn.Module):
     def __init__(self, input_size=126, hidden_size=256, num_layers=2, num_classes=2000, dropout=0.5):
         super().__init__()
@@ -23,7 +23,7 @@ class SignLanguageModel(nn.Module):
         h,_ = self.gru(x)
         return self.fc(h[:,-1,:])
 
-# Load the pre-trained model
+# Load the model
 model = SignLanguageModel(num_classes=2000)
 model_path = os.path.join(os.path.dirname(__file__), "..", "..", "buildingblocs_I27", "HearSay-Web", "model", "best_signlang_model.pt")
 model.load_state_dict(torch.load(model_path, map_location=torch.device('mps')))
@@ -36,7 +36,7 @@ with open(json_path) as f:
 label_map = {v['gloss']: k for k, v in enumerate(data)}
 index_to_gloss = {v: k for k, v in label_map.items()}
 
-# Initialize MediaPipe Hands
+# Mediapipe hands
 mp_hands = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 hands = mp_hands.Hands(static_image_mode=False,
@@ -44,7 +44,7 @@ hands = mp_hands.Hands(static_image_mode=False,
                        min_detection_confidence=0.5,
                        min_tracking_confidence=0.5)
 
-SEQ_LEN = 32 # Length of the sequence to process
+sequence_length = 32
 
 class VideoProcessor(VideoProcessorBase):
     def __init__(self):
@@ -52,12 +52,12 @@ class VideoProcessor(VideoProcessorBase):
         self.sequence = []
 
     def recv(self, frame):
-        # Convert the frame to BGR format for OpenCV
+        # Convert to numpy array for mediapipe processing
         img = frame.to_ndarray(format="bgr24")
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         results = hands.process(img_rgb)
 
-        # Initialize left and right hand landmarks
+        # display left and right hand landmarks
         left = np.zeros((21, 3), np.float32)
         right = np.zeros((21, 3), np.float32)
         if results.multi_hand_landmarks:
@@ -68,7 +68,7 @@ class VideoProcessor(VideoProcessorBase):
                     left = coords - coords[0]
                 else:
                     right = coords - coords[0]
-                mp_drawing.draw_landmarks(img, lm, mp_hands.HAND_CONNECTIONS)  # Draw on BGR image
+                mp_drawing.draw_landmarks(img, lm, mp_hands.HAND_CONNECTIONS)  # Draw landmarks
             if np.abs(left).max():
                 left /= np.abs(left).max()
             if np.abs(right).max():
@@ -76,12 +76,12 @@ class VideoProcessor(VideoProcessorBase):
         vec = np.hstack((left.flatten(), right.flatten()))
         self.sequence.append(vec)
 
-        # If the sequence exceeds SEQ_LEN, remove the oldest entry
-        if len(self.sequence) > SEQ_LEN:
+        # If the sequence exceeds sequence_length, remove the oldest entry
+        if len(self.sequence) > sequence_length:
             self.sequence.pop(0)
 
         # If we have enough data, make a prediction
-        if len(self.sequence) == SEQ_LEN:
+        if len(self.sequence) == sequence_length:
             input_tensor = torch.tensor([self.sequence], dtype=torch.float32)
             # Predict the sign language gesture
             with torch.no_grad():
@@ -89,14 +89,14 @@ class VideoProcessor(VideoProcessorBase):
                 pred = output.argmax(1).item()
                 gloss = index_to_gloss.get(pred, "Unknown")
             cv2.putText(img, gloss, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (0, 255, 0), 2, cv2.LINE_AA)  # Draw on BGR image
+                        1, (0, 255, 0), 2, cv2.LINE_AA)  # Show prediction on the image
             self.sign_text = gloss
         else:
             self.sign_text = None
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-# Global variable to store conversation history
+# Init conversation history
 conversation = []
 
 # Streamlit app
@@ -104,7 +104,7 @@ def main():
     st.set_page_config(page_title="HearSay", layout="centered")
     st.title("HearSay")
 
-    # Custom CSS for chat bubbles
+    # styling for chat bubbles
     st.markdown("""
     <style>
     .chat-bubble {
@@ -141,7 +141,7 @@ def main():
     st.subheader("Live Video (Webcam)")
     video_ctx = webrtc_streamer(key="sign-video", video_processor_factory=VideoProcessor)
 
-    # Speech-to-text input (recording)
+    # Speech-to-text (recording)
     speech_text = None  # Ensure variable is always defined
     audio_bytes = audio_recorder()
     if audio_bytes:
@@ -155,13 +155,13 @@ def main():
     if video_ctx and video_ctx.video_processor:
         sign_text = video_ctx.video_processor.sign_text
 
-    # Display the conversation history
+    # Add the conversation history to the conversation history variable
     if sign_text:
         conversation.append({"type": "sign", "text": sign_text})
     if speech_text:
         conversation.append({"type": "speech", "text": speech_text})
 
-    # Display the latest sign and speech text
+    # Display the conversation history
     st.markdown("<hr>", unsafe_allow_html=True)
     st.subheader("Conversation History")
     for msg in conversation:
