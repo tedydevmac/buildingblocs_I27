@@ -7,3 +7,7 @@ torch
 torchvision
 matplotlib
 seaborn
+audio-recorder-streamlit
+mediapipe
+streamlit-webrtc
+av

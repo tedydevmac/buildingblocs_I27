@@ -10,6 +10,7 @@ import queue
 
 st.title("Surrounding Awareness")
 
+# load cache stuff
 @st.cache_resource
 def init_tts_queue():
     return queue.Queue()
@@ -21,6 +22,7 @@ def fetch_model():
 detection_model = fetch_model()
 speech_queue = init_tts_queue()
 
+# initilise state
 if 'last_inference_time' not in st.session_state:
     st.session_state.last_inference_time = 0
 
@@ -30,7 +32,7 @@ if 'what_detected' not in st.session_state:
 if 'tts_thread_started' not in st.session_state:
     st.session_state.tts_thread_started = False
 
-
+# background tasks for text to speech with queue
 def tts_background_worker(q_obj, engine=None):
     while True:
         try:
@@ -60,6 +62,7 @@ if not st.session_state.tts_thread_started:
     st.session_state.tts_thread_started = True
 
 
+# locate where in grid the object is
 def locate_in_grid(x1, y1, x2, y2, frame_w, frame_h):
     mid_x = (x1 + x2) / 2
     mid_y = (y1 + y2) / 2
@@ -74,7 +77,7 @@ def locate_in_grid(x1, y1, x2, y2, frame_w, frame_h):
     ]
     return grid_labels[row][col]
 
-
+# help text to speech annouce 
 def announce_detections(found_items, w, h):
     if not found_items:
         phrase = "No objects detected"
@@ -96,7 +99,7 @@ def announce_detections(found_items, w, h):
 
     return phrase
 
-
+# more cache stuff
 @st.cache_resource
 def start_camera():
     return cv2.VideoCapture(0)
@@ -127,7 +130,7 @@ if grabbed:
 
         final_detections = []
         overlay = frame_rgb.copy()
-
+        # boundary boxes 
         for idx, bbox in enumerate(bbox_xyxy):
             x1, y1, x2, y2 = map(int, bbox)
             cls_id = int(class_ids[idx])

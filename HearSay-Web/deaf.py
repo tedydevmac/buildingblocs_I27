@@ -150,7 +150,6 @@ def main():
             f.write(audio_bytes)
         speech_text = transcribe_audio("temp/mic_input.wav")
 
-    # Use the sign_text from the video processor if available
     sign_text = None
     if video_ctx and video_ctx.video_processor:
         sign_text = video_ctx.video_processor.sign_text

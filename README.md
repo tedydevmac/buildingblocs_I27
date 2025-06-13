@@ -6,7 +6,9 @@
 
 3. pip install -r requirements.txt
 
-4. streamlit run main.py
+4. streamlit run main.py for the object detection
+
+5. streamlit run deaf.py for the deaf part
 
 After this all should be working as intended.
 
