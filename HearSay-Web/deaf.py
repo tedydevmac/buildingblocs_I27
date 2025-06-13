@@ -60,7 +60,7 @@ class VideoProcessor(VideoProcessorBase):
                     left = coords - coords[0]
                 else:
                     right = coords - coords[0]
-                mp_drawing.draw_landmarks(img, lm, mp_hands.HAND_CONNECTIONS)  # Draw on BGR image
+                mp_drawing.draw_landmarks(img, lm, mp_hands.HAND_CONNECTIONS) 
             if np.abs(left).max():
                 left /= np.abs(left).max()
             if np.abs(right).max():
@@ -78,7 +78,7 @@ class VideoProcessor(VideoProcessorBase):
                 pred = output.argmax(1).item()
                 gloss = index_to_gloss.get(pred, "Unknown")
             cv2.putText(img, gloss, (10, 30), cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (0, 255, 0), 2, cv2.LINE_AA)  # Draw on BGR image
+                        1, (0, 255, 0), 2, cv2.LINE_AA) 
             self.sign_text = gloss
         else:
             self.sign_text = None
@@ -123,12 +123,10 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    # Global variable to store the latest recognized sign text
     st.subheader("Live Video (Webcam)")
     video_ctx = webrtc_streamer(key="sign-video", video_processor_factory=VideoProcessor)
 
-    # Speech-to-text input (audio upload or recording)
-    speech_text = None  # Ensure variable is always defined
+    speech_text = None 
     audio_bytes = audio_recorder()
     if audio_bytes:
         os.makedirs("temp", exist_ok=True)
@@ -136,7 +134,6 @@ def main():
             f.write(audio_bytes)
         speech_text = transcribe_audio("temp/mic_input.wav")
 
-    # Use the sign_text from the video processor if available
     sign_text = None
     if video_ctx and video_ctx.video_processor:
         sign_text = video_ctx.video_processor.sign_text
