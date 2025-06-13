@@ -111,7 +111,6 @@ if grabbed:
     current = time.time()
     elapsed = current - st.session_state.last_inference_time
 
-    st.image(frame_rgb, caption="Live Camera Feed", channels="RGB")
 
     if elapsed >= 20 or st.session_state.last_inference_time == 0:
         st.session_state.last_inference_time = current
@@ -119,7 +118,7 @@ if grabbed:
         preds = detection_model(frame_rgb)
         results = preds[0]
 
-        st.write(f"🧠 Number of detections: {len(results.boxes)}")
+        st.write(f"Number of detections: {len(results.boxes)}")
 
         bbox_xyxy = results.boxes.xyxy.cpu().numpy()
         class_ids = results.boxes.cls.cpu().numpy()
@@ -150,12 +149,12 @@ if grabbed:
         cv2.line(grid_overlay, (0, h // 3), (w, h // 3), (255, 255, 255), 2)
         cv2.line(grid_overlay, (0, 2 * h // 3), (w, 2 * h // 3), (255, 255, 255), 2)
 
-        st.image(grid_overlay, caption=f"Detections with Grid @ {time.strftime('%H:%M:%S', time.localtime(current))}", channels="RGB")
+        st.image(grid_overlay, caption=f"Detections", channels="RGB")
 
         spoken = announce_detections(final_detections, w, h)
 
-        st.subheader(f"Detections as of {time.strftime('%H:%M:%S', time.localtime(current))}")
-        st.info(f"🔊 Speaking: {spoken}")
+        st.subheader(f"Detections")
+        st.info(f" Speaking: {spoken}")
 
         if not final_detections:
             st.write("Nothing caught on camera.")
@@ -163,14 +162,14 @@ if grabbed:
             for thing in final_detections:
                 name, x1, y1, x2, y2, conf = thing
                 pos = locate_in_grid(x1, y1, x2, y2, w, h)
-                st.write(f"🔍 {name} spotted in {pos} — confidence: {conf:.2f}")
+                st.write(f"{name} spotted in {pos}")
 
         time.sleep(1)
         st.rerun()
 
     else:
         wait_for = int(20 - elapsed)
-        st.caption(f"⏳ Waiting {wait_for} seconds to refresh detection...")
+        st.caption(f"Time - {wait_for}.")
         time.sleep(1)
         st.rerun()
 
