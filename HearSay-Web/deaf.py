@@ -21,11 +21,13 @@ class SignLanguageModel(nn.Module):
         return self.fc(h[:,-1,:])
 
 model = SignLanguageModel(num_classes=2000)
-model.load_state_dict(torch.load("/Users/kenzie/Documents/VS-code/Hackathons/BuildingBlocs/speech-to-text-app/src/model/best_signlang_model.pt", map_location=torch.device('mps')))
+model_path = os.path.join(os.path.dirname(__file__), "..", "..", "buildingblocs_I27", "HearSay-Web", "model", "best_signlang_model.pt")
+model.load_state_dict(torch.load(model_path, map_location=torch.device('mps')))
 model.eval()
 
 import json
-with open("/Users/kenzie/Documents/VS-code/Hackathons/BuildingBlocs/speech-to-text-app/src/model/WLASL_v0.3.json") as f:
+json_path = os.path.join(os.path.dirname(__file__), "..", "..", "buildingblocs_I27", "HearSay-Web", "model", "WLASL_v0.3.json")
+with open(json_path) as f:
     data = json.load(f)
 label_map = {v['gloss']: k for k, v in enumerate(data)}
 index_to_gloss = {v: k for k, v in label_map.items()}
